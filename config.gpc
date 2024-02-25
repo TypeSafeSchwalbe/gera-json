@@ -1,0 +1,8 @@
+name = "gera-json"
+description = "A library for parsing and generating JSON."
+authors = ["TypeSafeSchwalbe"]
+version = "0.1"
+target = "any"
+dependencies = [
+    <https://github.com/geralang/std>
+]

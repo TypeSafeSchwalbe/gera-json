@@ -1,0 +1,50 @@
+
+mod json::generator
+
+use std::*
+
+proc escape_string_content(c) {
+    return c
+        |> str::split("\\")   |> str::join("\\\\")
+        |> str::split("\x08") |> str::join("\\b")
+        |> str::split("\x0C") |> str::join("\\f")
+        |> str::split("\r")   |> str::join("\\r")
+        |> str::split("\n")   |> str::join("\\n")
+        |> str::split("\x09") |> str::join("\\t")
+        |> str::split("/")    |> str::join("\\/")
+        |> str::split("\"")   |> str::join("\\\"")
+}
+
+proc generate_array_content(a) {
+    return a
+        .> iter()
+        |> iter::map(|v| v |> stringify())
+        |> str::join(", ")
+}
+
+proc generate_object_content(o) {
+    return o
+        .> iter()
+        |> iter::map(|p| "\"_\": _" |> str::fmt([
+            p.key |> escape_string_content(),
+            p.value |> stringify()
+        ]))
+        |> str::join(", ")
+}
+
+pub proc stringify(value) {
+    case value {
+        #null -> return "null"
+        #number n -> return n |> as_flt() |> as_str()
+        #bool b -> case b -> return "true" else return "false"
+        #string s -> return "\""
+            |> concat(s |> escape_string_content())
+            |> concat("\"")
+        #array a -> return "["
+            |> concat(a |> generate_array_content())
+            |> concat("]")
+        #object o -> return "{ "
+            |> concat(o |> generate_object_content())
+            |> concat(" }")
+    }
+}

@@ -1,0 +1,137 @@
+
+mod json::lexer
+
+use std::*
+use std::coll::Vector
+
+proc is_whitespace(char) {
+    return str::iter(static " \n\r\x09")
+        |> iter::has(char)
+}
+
+proc is_digit(char) {
+    return str::iter(static "0123456789")
+        |> iter::has(char)
+}
+
+pub proc token(kind, content, start, end) {
+    return { kind = kind, content = content, start = start, end = end }
+}
+
+pub proc format_src(source, index) {
+    var line_start_i = 1..index
+        |> iter::find_last(|i| str::at(source, i - 1) == "\n")
+        |> opt::unwrap_or(0)
+    var line = source
+        |> str::substring_until(line_start_i)
+        |> str::iter()
+        |> iter::filter(|c| c == "\n")
+        |> iter::count()
+    return "_:_"
+        |> str::fmt([
+            as_str(line + 1),
+            as_str(index - line_start_i + 1)
+        ])
+}
+
+proc collapse_escapes(s) {
+    return s
+        |> str::split("\\\"") |> str::join("\"")
+        |> str::split("\\b")  |> str::join("\x08")
+        |> str::split("\\f")  |> str::join("\x0C")
+        |> str::split("\\r")  |> str::join("\r")
+        |> str::split("\\n")  |> str::join("\n")
+        |> str::split("\\t")  |> str::join("\x09")
+        |> str::split("\\/")  |> str::join("/")
+        |> str::split("\\\\") |> str::join("\\")
+}
+
+pub proc tokenize(source) {
+    mut var start_i = 0
+    return || {
+        case start_i >= length(source) -> return #end unit
+        var start_c = source |> str::at(start_i)
+        // whitespaces
+        case start_c |> is_whitespace() -> {
+            var end_i = (start_i + 1)..length(source)
+                |> iter::find(|i| !(source |> str::at(i) |> is_whitespace()))
+                |> opt::unwrap_or(source |> length())
+            var token_t = source |> substring(start_i, end_i)
+                |> collapse_escapes()
+            var t = token(#whitespace unit, token_t, start_i, end_i)
+            start_i = end_i
+            return #next #ok t
+        }
+        // numbers
+        case is_digit(start_c) || start_c == "-" -> {
+            var belongs_to_number = |i| {
+                var c = source |> str::at(i)
+                case c |> is_digit() -> return true
+                case c == "-" && i == start_i -> return true
+                var had_dot = start_i..i
+                    |> iter::map(|si| source |> str::at(si))
+                    |> iter::has(".")
+                return c == "." && !had_dot
+            }
+            var end_i = start_i..length(source)
+                |> iter::find(|i| !belongs_to_number(i))
+                |> opt::unwrap_or(source |> length())
+            var token_t = source |> substring(start_i, end_i)
+            var t = token(#number unit, token_t, start_i, end_i)
+            start_i = end_i
+            return #next #ok t
+        }
+        // strings
+        case start_c == "\"" -> {
+            var is_escaped = |i| str::at(source, i - 1) == "\\"
+            var closing_i = (start_i + 1)..length(source)
+                |> iter::find(|i| str::at(source, i) == "\"" && !is_escaped(i))
+            var end_i
+            case closing_i {
+                #none -> return #next #err "[_] unclosed string literal"
+                    |> str::fmt([format_src(source, start_i)])
+                #some i -> end_i = i + 1
+            }
+            var token_t = source |> substring(start_i, end_i)
+            var t = token(#string unit, token_t, start_i, end_i)
+            start_i = end_i
+            return #next #ok t
+        }
+        // fixed multi-character tokens
+        var is_next = |s| source 
+            |> str::substring_after(start_i)
+            |> str::starts_with(s)
+        case "null" |> is_next() -> {
+            var end_i = start_i + static length("null")
+            var t = token(#null unit, "null", start_i, end_i)
+            start_i = end_i
+            return #next #ok t
+        }
+        case "true" |> is_next() -> {
+            var end_i = start_i + static length("true")
+            var t = token(#bool unit, "true", start_i, end_i)
+            start_i = end_i
+            return #next #ok t
+        }
+        case "false" |> is_next() -> {
+            var end_i = start_i + static length("false")
+            var t = token(#bool unit, "false", start_i, end_i)
+            start_i = end_i
+            return #next #ok t
+        }
+        // single-character tokens
+        var kind
+        case start_c {
+            "," -> kind = #comma unit
+            ":" -> kind = #colon unit
+            "{" -> kind = #brace_open unit
+            "}" -> kind = #brace_close unit
+            "[" -> kind = #bracket_open unit
+            "]" -> kind = #bracket_close unit
+        } else return #next #err "[_] invalid character '_'"
+            |> str::fmt([format_src(source, start_i), start_c])
+        var t = token(kind, start_c, start_i, start_i + 1)
+        start_i = start_i + 1
+        return #next #ok t
+    }
+}

@@ -1,0 +1,74 @@
+
+mod json::parser
+
+use std::*
+use std::coll::Vector
+
+// --- object ---
+// '{' '}'
+// '{' <string> ':' <value> '}'
+// '{' <string> ':' <value> ',' <string> ':' <value> ',' (...) '}'
+
+// --- array ---
+// '[' ']'
+// '[' <value> ']'
+// '[' <value> ',' <value> ',' (...) ']'
+
+// --- value ---
+// <string>
+// <number>
+// <object>
+// <array>
+// 'true'
+// 'false'
+// 'null'
+
+pub proc parse(tokens, source) {
+    var start_t
+    case tokens |> iter::next() {
+        #none -> return #err "expected a value, but reached the end"
+        #some r -> case r {
+            #err e -> return #err e
+            #ok t -> start_t = t
+        }
+    }
+    case start_t.kind {
+        #null -> return #ok #null unit
+        #string -> return #ok #string start_t.content
+            |> substring(1, -1)
+        #number -> return #ok #number start_t.content
+            |> str::parse_flt()
+            |> opt::expect("lexed number should be a valid")
+        #bool -> case start_t.content {
+            "true" -> return #ok #bool true
+            "false" -> return #ok #bool false
+        } else return panic("lexed boolean should be valid")
+        #bracket_open -> {
+            var r = tokens
+                |> iter::take_while(|r| r
+                    |> res::map(|t| t.kind != #bracket_close unit)
+                    |> res::unwrap_or(true)
+                )
+                |> iter::filter(|r| r
+                    |> res::map(|t| t.kind != #comma unit)
+                    |> res::unwrap_or(true)
+                )
+                |> iter::reduce(
+                    |o, r| o |> res::and_then(|vec|
+                        tokens |> parse(source) |> res::map(|val| vec .> push(val))
+                    ),
+                    #ok Vector::new()
+                )
+                |> res::map(|vec| #array vec)
+            case tokens |> iter::next() {
+                #some r -> case r { #err r -> return #err r #ok -> {} }
+                #none -> {}
+            }
+            return r
+        }
+        #brace_open -> return panic("not yet implemented")
+    } else return #err "[_] unexpected token '_'"
+        |> str::fmt([
+            json::lexer::format_src(source, start_t.start), start_t.content
+        ])
+}

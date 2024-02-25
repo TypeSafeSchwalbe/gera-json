@@ -1,0 +1,55 @@
+
+mod json
+
+pub proc parse(source) {
+    return source
+        |> json::lexer::tokenize()
+        |> json::parser::parse(source)
+}
+
+pub proc is_null(value) {
+    case value { #null -> return true } else return false
+}
+pub proc get_null(value) {
+    case value { #null v -> return #some v } else return #none unit
+}
+
+pub proc is_string(value) {
+    case value { #string -> return true } else return false
+}
+pub proc get_string(value) {
+    case value { #string v -> return #some v } else return #none unit
+}
+
+pub proc is_number(value) {
+    case value { #number -> return true } else return false
+}
+pub proc get_number(value) {
+    case value { #number v -> return #some v } else return #none unit
+}
+
+pub proc is_bool(value) {
+    case value { #bool -> return true } else return false
+}
+pub proc get_bool(value) {
+    case value { #bool v -> return #some v } else return #none unit
+}
+
+pub proc is_array(value) {
+    case value { #array -> return true } else return false
+}
+pub proc get_array(value) {
+    case value { #array v -> return #some v } else return #none unit
+}
+
+pub proc is_object(value) {
+    case value { #object -> return true } else return false
+}
+pub proc get_object(value) {
+    case value { #object v -> return #some v } else return #none unit
+}
+
+pub proc to_string(value) {
+    return value
+        |> json::generator::stringify()
+}
