@@ -3,10 +3,11 @@
 A small and simple Gera library for parsing and generating JSON, written in Gera and therefore supporting any compilation target.
 
 ### Progress
-- [x] Lexer
+- [ ] Lexer
+    - [ ] Exponentials in number literals
 - [ ] Parser
-    - [ ] Object Parsing 
-    - [ ] Compiler Bug (usage results in stack overflow)
-- [x] Value Utilities
+    - [ ] Object parsing 
+    - [ ] Compiler bug (usage results in stack overflow)
+- [x] Value utilities
 - [ ] Generator
-    - [ ] Compiler Bug (usage results in stack overflow)
+    - [ ] Compiler bug (usage results in stack overflow)
