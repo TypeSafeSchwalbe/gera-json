@@ -1,4 +1,4 @@
-name = "gera-json"
+name = "json"
 description = "A library for parsing and generating JSON."
 authors = ["TypeSafeSchwalbe"]
 version = "0.1"
