@@ -1,10 +1,22 @@
 
 mod json
 
+use std::(iter, res, opt)
+
 pub proc parse(source) {
-    return source
+    var tokens = source
         |> json::lexer::tokenize()
-        |> json::parser::parse(source)
+        |> iter::filter(|r| r
+            |> res::map(|t| t.kind != #whitespace unit)
+            |> res::unwrap_or(true)
+        )
+    case tokens |> iter::next() {
+        #none -> return #err "nothing to parse"
+        #some r -> case r {
+            #ok t -> return t |> json::parser::parse(tokens, source)
+            #err e -> return #err e
+        }
+    }  
 }
 
 pub proc is_null(value) {
