@@ -57,9 +57,9 @@ pub proc get_object(value) {
 // Determines if the given JSON value `value` is an object.
 pub proc is_object(value) = value |> get_object() |> is_some()
 
-// Attempts to parse a JSON value from a given string `src`, returning a result
-// of the parsed JSON value and a human-readable string error.
-pub proc from_str(src) = panic("TODO!")
+// Attempts to parse a JSON value from a given string `source`, returning
+// a result of the parsed JSON value and a human-readable string error.
+pub proc from_str(source) = json::parser::parse(source)
 
 // Converts the given JSON value `value` to its JSON string representation.
 pub proc as_str(value) = panic("TODO!")
