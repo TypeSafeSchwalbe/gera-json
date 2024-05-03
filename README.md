@@ -1,3 +1,3 @@
 
 # gera-json
-A Gera library for working with JSON.
+A simple Gera library for working with JSON.
