@@ -11,14 +11,14 @@ proc is_digit(char) = iter("0123456789") |> has(char)
 
 // Collapses JSON string escape sequences to their corresponding characters.
 proc collapse_escapes(s) = s
-    |> split("\\\"") |> join("\"")
-    |> split("\\b")  |> join("\x08")
-    |> split("\\f")  |> join("\x0C")
-    |> split("\\r")  |> join("\r")
-    |> split("\\n")  |> join("\n")
-    |> split("\\t")  |> join("\x09")
-    |> split("\\/")  |> join("/")
-    |> split("\\\\") |> join("\\")
+    |> replace("\\\"",   "\"")
+    |> replace( "\\b", "\x08")
+    |> replace( "\\f", "\x0C")
+    |> replace( "\\r",   "\r")
+    |> replace( "\\n",   "\n")
+    |> replace( "\\t", "\x09")
+    |> replace( "\\/",    "/")
+    |> replace("\\\\",   "\\")
 
 // Creates a new token.
 proc token(kind, content, start, end) = { kind, content, start, end }
