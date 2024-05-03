@@ -62,4 +62,4 @@ pub proc is_object(value) = value |> get_object() |> is_some()
 pub proc from_str(source) = json::parser::parse(source)
 
 // Converts the given JSON value `value` to its JSON string representation.
-pub proc as_str(value) = panic("TODO!")
+pub proc as_str(value) = json::generator::generate(value)
