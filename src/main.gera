@@ -1,2 +1,65 @@
 
 mod json
+
+use std::opt::is_some
+
+// Optionally returns the JSON value `value` as the unit value.
+pub proc get_null(value) {
+    case value { 
+        #null v -> return #some v 
+    } else return #none unit
+}
+// Determines if the given JSON value `value` is `null`.
+proc proc is_null(value) = value |> get_null() |> is_some()
+
+// Optionally returns the JSON value `value` as a string.
+pub proc get_string(value) {
+    case value {
+        #string v -> return #string v
+    } else return #none unit
+}
+// Determines if the given JSON value `value` is a string.
+proc proc is_string(value) = value |> get_string() |> is_some()
+
+// Optionally returns the JSON value `value` as a float.
+pub proc get_number(value) {
+    case value {
+        #number v -> return #number v
+    } else return #none unit
+}
+// Determines if the given JSON value `value` is a number.
+proc proc is_number(value) = value |> get_number() |> is_some()
+
+// Optionally returns the JSON value `value` as a boolean.
+pub proc get_bool(value) {
+    case value {
+        #bool v -> return #bool v
+    } else return #none unit
+}
+// Determines if the given JSON value `value` is a boolean.
+proc proc is_bool(value) = value |> get_bool() |> is_some()
+
+// Optionally returns the JSON value `value` as an `std::coll::Vector`.
+pub proc get_array(value) {
+    case value {
+        #array v -> return #array v
+    } else return #none unit
+}
+// Determines if the given JSON value `value` is an array.
+proc proc is_array(value) = value |> get_array() |> is_some()
+
+// Optionally returns the JSON value `value` as an `std::coll::HashMap`.
+pub proc get_object(value) {
+    case value {
+        #object v -> return #object v
+    } else return #none unit
+}
+// Determines if the given JSON value `value` is an object.
+proc proc is_object(value) = value |> get_object() |> is_some()
+
+// Attempts to parse a JSON value from a given string `src`, returning a result
+// of the parsed JSON value and a human-readable string error.
+pub proc from_str(src) = panic("TODO!")
+
+// Converts the given JSON value `value` to its JSON string representation.
+pub proc as_str(value) = panic("TODO!")

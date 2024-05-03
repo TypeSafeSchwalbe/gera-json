@@ -1,0 +1,98 @@
+
+mod json::lexer
+
+use std::(str::*, iter::*, opt::*)
+
+// Returns if the given character is a whitespace according to the JSON grammar.
+proc is_whitespace(char) = iter(" \n\r\x09") |> has(char)
+
+// Returns if the given character is an ASCII digit.
+proc is_digit(char) = iter("0123456789") |> has(char)
+
+// Collapses JSON string escape sequences to their corresponding characters.
+proc collapse_escapes(s) = s
+    |> split("\\\"") |> join("\"")
+    |> split("\\b")  |> join("\x08")
+    |> split("\\f")  |> join("\x0C")
+    |> split("\\r")  |> join("\r")
+    |> split("\\n")  |> join("\n")
+    |> split("\\t")  |> join("\x09")
+    |> split("\\/")  |> join("/")
+    |> split("\\\\") |> join("\\")
+
+// Creates a new token.
+proc token(kind, content, start, end) = { kind, content, start, end }
+
+// Returns a new iterator over the tokens in the string `source`.
+pub proc tokens(source) {
+    mut start = 0
+    return || {
+        start = start..length(source)
+            |> find(|i| !is_whitespace(source |> at(i)))
+            |> unwrap_or(start)
+        case start >= length(source) -> return #end unit
+        val s_char = source |> at(start)
+        // numbers
+        case is_digit(s_char) || s_char == "-" -> {
+            mut had_dot = false
+            val part_of_number = |c| {
+                case c == "." && !had_dot -> {
+                    had_dot = true
+                    return true
+                }
+                return c |> is_digit()
+            }
+            val end = (start + 1)..length(source)
+                |> find(|i| !part_of_number(source |> at(i)))
+                |> unwrap_or(length(source))
+            val tc = source |> substring(start, end)
+            val t = token(#number unit, tc, start, end)
+            start = end
+            return #next #ok t
+        }
+        // strings
+        case s_char == "\"" -> {
+            val is_escaped = |i| at(source, i - 1) == "\\"
+            val closing_i = (start + 1)..length(source)
+                |> filter(|i| at(source, i) == "\"")
+                |> filter(|i| at(source, i - 1) != "\\")
+                |> next()
+            val end
+            case closing_i {
+                #none -> return #next #err "[_] unclosed string literal"
+                    |> fmt([json::source::as_str(source, start)])
+                #some i -> end = i + 1
+            }
+            val tc = source
+                |> substring(start + 1, end - 1)
+                |> collapse_escapes()
+            val t = token(#string unit, tc, start, end)
+            start = end
+            return #next #ok t
+        }
+        // null, true, false
+        val tokenize_keyword = |keyword, kind| {
+            case source |> substring_after(start) |> starts_with(keyword) -> {
+                val og_start = start
+                start = start + length(keyword)
+                return #next #ok token(kind, keyword, og_start, start)
+            } else return #end unit
+        }
+        tokenize_keyword("null", #null unit) ?end
+        tokenize_keyword("true", #bool unit) ?end
+        tokenize_keyword("false", #bool unit) ?end
+        // single-char tokens
+        val kind
+        case s_char {
+            "," -> kind = #comma unit
+            ":" -> kind = #colon unit
+            "{" -> kind = #brace_open unit
+            "}" -> kind = #brace_close unit
+            "[" -> kind = #bracket_open unit
+            "]" -> kind = #bracket_close unit
+        } else return #next #err "[_] invalid character '_'"
+            |> fmt([json::source::as_str(source, start), s_char])
+        start = start + 1
+        return #next #ok token(kind, s_char, start - 1, start)
+    }
+}
