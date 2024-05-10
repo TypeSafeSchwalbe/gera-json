@@ -3,7 +3,7 @@ mod json::generator
 
 use std::(iter::*, str::*)
 
-// Converts a JSON value to its JSON string representation.
+/// Converts a JSON value to its JSON string representation.
 pub proc generate(value) {
     case value {
         #null -> return "null"

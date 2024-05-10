@@ -3,13 +3,13 @@ mod json::lexer
 
 use std::(str::*, iter::*, opt::*)
 
-// Returns if the given character is a whitespace according to the JSON grammar.
+/// Returns if the given character is a whitespace according to the JSON grammar.
 proc is_whitespace(char) = iter(" \n\r\x09") |> has(char)
 
-// Returns if the given character is an ASCII digit.
+/// Returns if the given character is an ASCII digit.
 proc is_digit(char) = iter("0123456789") |> has(char)
 
-// Collapses JSON string escape sequences to their corresponding characters.
+/// Collapses JSON string escape sequences to their corresponding characters.
 proc collapse_escapes(s) = s
     |> replace("\\\"",   "\"")
     |> replace( "\\b", "\x08")
@@ -20,10 +20,10 @@ proc collapse_escapes(s) = s
     |> replace( "\\/",    "/")
     |> replace("\\\\",   "\\")
 
-// Creates a new token.
+/// Creates a new token.
 proc token(kind, content, start, end) = { kind, content, start, end }
 
-// Returns a new iterator over the tokens in the string `source`.
+/// Returns a new iterator over the tokens in the string `source`.
 pub proc tokens(source) {
     mut start = 0
     return || {

@@ -3,16 +3,16 @@ mod json::parser
 
 use std::(iter::*, res::*, opt::*, str::*, coll::*)
 
-// Given a stream of tokens `tokens` and their source string `source`, returns
-// a result of the next token or a human-readable string.
+/// Given a stream of tokens `tokens` and their source string `source`, returns
+/// a result of the next token or a human-readable string.
 proc next_token(tokens, source) = tokens
     |> next()
     |> unwrap_or_else(|| #err "[_] unexpected EOF"
         |> fmt([json::source::as_str(source, length(source) - 1)])
     )
 
-// Returns a result of either a new parser for the given source string `source`
-// or a human-readable error. 
+/// Returns a result of either a new parser for the given source string `source`
+/// or a human-readable error. 
 proc create_parser(source) {
     val tokens = source
         |> json::lexer::tokens()
@@ -44,8 +44,8 @@ proc create_parser(source) {
     }
 }
 
-// Returns a result of the JSON value starting at the current token
-// of the parser `p` or a human-readable error.
+/// Returns a result of the JSON value starting at the current token
+/// of the parser `p` or a human-readable error.
 proc parse_value(p) {
     val start = p.current
     case start.kind {
@@ -73,8 +73,8 @@ proc parse_value(p) {
         |> fmt([json::source::as_str(p.source, start.start)])
 }
 
-// Returns a result of the JSON array starting at the current token
-// of the parser `p` or a human-readable error.
+/// Returns a result of the JSON array starting at the current token
+/// of the parser `p` or a human-readable error.
 proc parse_array(p) {
     val values = repeat_over(|| p)
         |> take_while(|p| p.current.content == "[" || p.current.content == ",")
@@ -91,8 +91,8 @@ proc parse_array(p) {
     return #ok #array values
 }
 
-// Returns a result of the JSON object starting at the current token
-// of the parser `p` or a human-readable error.
+/// Returns a result of the JSON object starting at the current token
+/// of the parser `p` or a human-readable error.
 proc parse_object(p) {
     val members = repeat_over(|| p)
         |> take_while(|p| p.current.content == "{" || p.current.content == ",")
@@ -114,8 +114,8 @@ proc parse_object(p) {
     return #ok #object members
 }
 
-// Attempts to parse a JSON value from a given string `source`, 
-// returning a result of the parsed JSON value or a human-readable string error.
+/// Attempts to parse a JSON value from a given string `source`, 
+/// returning a result of the parsed JSON value or a human-readable string error.
 pub proc parse(source) = source 
     |> create_parser() ?ok
     |> parse_value()

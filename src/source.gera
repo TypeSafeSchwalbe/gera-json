@@ -3,22 +3,22 @@ mod json::source
 
 use std::(iter::*, str::*, opt::*)
 
-// Returns the index of the first character in `source` that is part of the
-// same line as the character in `source` at the index `index`.
+/// Returns the index of the first character in `source` that is part of the
+/// same line as the character in `source` at the index `index`.
 proc line_start_idx(source, index) = 1..index
     |> find_last(|i| at(source, i - 1) == "\n")
     |> unwrap_or(0)
 
-// Returns the index of the line in `source` that the character at
-// the index `index` is on.
+/// Returns the index of the line in `source` that the character at
+/// the index `index` is on.
 proc line_idx(source, index) = source
     |> substring_until(index)
     |> iter()
     |> filter(|c| c == "\n")
     |> count()
 
-// Displays the line and column of the character at the index
-// `index` in `source`.
+/// Displays the line and column of the character at the index
+/// `index` in `source`.
 pub proc as_str(source, index) {
     val line_start = line_start_idx(source, index)
     return "_:_"
