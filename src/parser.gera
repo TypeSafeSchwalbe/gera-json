@@ -81,8 +81,10 @@ proc parse_array(p) {
         |> reduce(|r, p| {
             val items = r ?ok
             p .> next() ?ok
-            val item = p |> parse_value() ?ok
-            items .> push(item)
+            case p.current.content != "]" -> {
+                val item = p |> parse_value() ?ok
+                items .> push(item)
+            }
             return #ok items
         }, #ok Vector::new())
         ?ok
@@ -99,13 +101,15 @@ proc parse_object(p) {
         |> reduce(|r, p| {
             val members = r ?ok
             p .> next() ?ok
-            p .> expect(#string unit) ?ok
-            val name = p.current.content
-            p .> next() ?ok
-            p .> expect(#colon unit) ?ok
-            p .> next() ?ok
-            val value = p |> parse_value() ?ok
-            members .> set(name, value)
+            case p.current.content != "}" -> {
+                p .> expect(#string unit) ?ok
+                val name = p.current.content
+                p .> next() ?ok
+                p .> expect(#colon unit) ?ok
+                p .> next() ?ok
+                val value = p |> parse_value() ?ok
+                members .> set(name, value)
+            }
             return #ok members
         }, #ok HashMap::new())
         ?ok
