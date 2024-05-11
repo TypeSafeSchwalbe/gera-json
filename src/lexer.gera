@@ -70,17 +70,6 @@ pub proc tokens(source) {
             start = end
             return #next #ok t
         }
-        // null, true, false
-        val tokenize_keyword = |keyword, kind| {
-            case source |> substring_after(start) |> starts_with(keyword) -> {
-                val og_start = start
-                start = start + length(keyword)
-                return #next #ok token(kind, keyword, og_start, start)
-            } else return #end unit
-        }
-        tokenize_keyword("null", #null unit) ?end
-        tokenize_keyword("true", #bool unit) ?end
-        tokenize_keyword("false", #bool unit) ?end
         // single-char tokens
         val kind
         case s_char {
@@ -90,8 +79,21 @@ pub proc tokens(source) {
             "}" -> kind = #brace_close unit
             "[" -> kind = #bracket_open unit
             "]" -> kind = #bracket_close unit
-        } else return #next #err "[_] invalid character '_'"
-            |> fmt([json::source::as_str(source, start), s_char])
+        } else {
+            // null, true, false
+            val tokenize_keyword = |keyword, kind| {
+                case source |> substring_after(start) |> starts_with(keyword) -> {
+                    val og_start = start
+                    start = start + length(keyword)
+                    return #next #ok token(kind, keyword, og_start, start)
+                } else return #end unit
+            }
+            tokenize_keyword("null", #null unit) ?end
+            tokenize_keyword("true", #bool unit) ?end
+            tokenize_keyword("false", #bool unit) ?end
+            return #next #err "[_] invalid character '_'"
+                |> fmt([json::source::as_str(source, start), s_char])
+        }
         start = start + 1
         return #next #ok token(kind, s_char, start - 1, start)
     }
