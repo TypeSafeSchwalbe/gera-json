@@ -1,0 +1,9 @@
+{
+    "name": "json",
+    "description": "A simple library for working with JSON.",
+    "authors": ["TypeSafeSchwalbe"],
+    "target": "any",
+    "dependencies": [
+        "https://github.com/geralang/std"
+    ]
+}
